@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "aucradar"
+version = "0.1.0"
+description = ""
+authors = ["grrr127 <qrrr127@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+django = "^5.2.8"
+djangorestframework = "^3.16.1"
+django-environ = "^0.12.0"
+drf-spectacular = "^0.29.0"
+psycopg = {extras = ["binary"], version = "^3.2.13"}
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.11.0"
+ruff = "^0.14.6"
+isort = "^7.0.0"
+pre-commit = "^4.5.0"
+django-extensions = "^4.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

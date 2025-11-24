@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+
+# Env
+.env
+
+# Django
+*.sqlite3
+/static/
+media/
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# Pyenv
+.python-version
+
+# Poetry
+.venv/
+
+# Migrations (선택)
+*/migrations/__pycache__/
