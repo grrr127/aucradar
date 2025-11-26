@@ -18,6 +18,7 @@ DEBUG = env("DJANGO_DEBUG")
 
 ALLOWED_HOSTS = []
 
+AUTH_USER_MODEL = "users.User"
 
 # Application definition
 
@@ -34,7 +35,6 @@ INSTALLED_APPS = [
     "users",
     "auctions",
     "alerts",
-    "notifications",
     "core",
     "operations",
 ]
