@@ -3,6 +3,25 @@ from django.db import models
 from core.models import TimeStampedModel
 
 
+class AuctionSource(models.TextChoices):
+    COURT = "court", "법원경매"
+    ONBID = "onbid", "온비드공매"
+    OTHER = "other", "기타"
+
+
+class AuctionStatus(models.TextChoices):
+    ACTIVE = "active", "진행중"
+    END = "end", "종료"
+    FAIL = "fail", "유찰"
+    UNKNOWN = "unknown", "알 수 없음"
+
+
+class BidMethod(models.TextChoices):
+    DAY = "day", "기일입찰"
+    PERIOD = "period", "기간입찰"
+    UNKNOWN = "unknown", "알 수 없음"
+
+
 class CategoryLarge(models.Model):
     code = models.CharField(max_length=20, unique=True)
     name = models.CharField(max_length=50, unique=True)
@@ -52,7 +71,13 @@ class CategorySmall(models.Model):
 
 
 class AuctionItem(TimeStampedModel):
-    source = models.CharField(max_length=20)
+    source = models.CharField(
+        max_length=20,
+        choices=AuctionSource.choices,
+    )
+    raw_source = models.CharField(
+        max_length=50, null=True, blank=True, help_text="원본 사이트명 그대로"
+    )
 
     title = models.CharField(max_length=255)
     location = models.CharField(max_length=255)
@@ -64,11 +89,20 @@ class AuctionItem(TimeStampedModel):
     auction_date = models.DateField(null=True, blank=True)
     bid_method = models.CharField(
         max_length=30,
+        choices=BidMethod.choices,
+        default=BidMethod.UNKNOWN,
         null=True,
         blank=True,
-        help_text="입찰방법(예: 기일입찰, 기간입찰 등)",
     )
-    status = models.CharField(max_length=50, null=True, blank=True)
+    raw_bid_method = models.CharField(max_length=100, null=True, blank=True)
+    status = models.CharField(
+        max_length=50,
+        choices=AuctionStatus.choices,
+        default=AuctionStatus.UNKNOWN,
+        null=True,
+        blank=True,
+    )
+    raw_status = models.CharField(max_length=100, null=True, blank=True)
     num_failures = models.IntegerField(default=0)
 
     large = models.ForeignKey(
