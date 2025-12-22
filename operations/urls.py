@@ -1,9 +1,19 @@
 from django.urls import path
 
-from .views import CrawlItemLogListView, CrawlJobDetailView, CrawlJobListCreateView
+from .views import (
+    CrawlItemLogListView,
+    CrawlJobDetailView,
+    CrawlJobListView,
+    RunCourtCrawlJobView,
+    RunOnbidCrawlJobView,
+    RunStatusRefreshJobView,
+)
 
 urlpatterns = [
-    path("crawls/jobs/", CrawlJobListCreateView.as_view()),
-    path("crawls/jobs/<int:pk>/", CrawlJobDetailView.as_view()),
-    path("crawls/logs/", CrawlItemLogListView.as_view()),
+    path("jobs/", CrawlJobListView.as_view(), name="crawljob-list"),
+    path("jobs/<int:pk>/", CrawlJobDetailView.as_view(), name="crawljob-detail"),
+    path("item-logs/", CrawlItemLogListView.as_view(), name="crawlitemlog-list"),
+    path("crawl/court/", RunCourtCrawlJobView.as_view(), name="crawl-court"),
+    path("crawl/onbid/", RunOnbidCrawlJobView.as_view(), name="crawl-onbid"),
+    path("status-refresh/", RunStatusRefreshJobView.as_view(), name="status-refresh"),
 ]

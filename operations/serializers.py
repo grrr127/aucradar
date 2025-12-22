@@ -112,16 +112,3 @@ class CrawlJobDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-
-
-class CrawlJobCreateSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = CrawlJob
-        fields = ["id", "source", "note", "status", "created_at"]
-        read_only_fields = ["id", "status", "created_at"]
-
-    def create(self, validated_data):
-        request = self.context.get("request")
-        user = request.user if request else None
-        return CrawlJob.objects.create(triggered_by=user, **validated_data)

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import environ
@@ -152,3 +153,5 @@ CACHES = {
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+ONBID_SERVICE_KEY = os.getenv("ONBID_SERVICE_KEY", "")

@@ -1,8 +1,15 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import AlertPreference, NotificationLog
-from .serializers import AlertPreferenceSerializer, NotificationLogSerializer
+from .serializers import (
+    AlertPreferenceSerializer,
+    AlertPreviewItemSerializer,
+    NotificationLogSerializer,
+)
+from .services import find_matching_items_for_alert
 
 
 class AlertPreferenceListCreateView(generics.ListCreateAPIView):
@@ -52,3 +59,20 @@ class NotificationLogListView(generics.ListAPIView):
             qs = qs.filter(alert_id=alert_id)
 
         return qs.order_by("-created_at")
+
+
+class AlertPreferencePreviewItemsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            alert = AlertPreference.objects.get(pk=pk, user=request.user)
+        except AlertPreference.DoesNotExist:
+            return Response(
+                {"detail": "알림 설정을 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        qs = find_matching_items_for_alert(alert)[:50]
+        ser = AlertPreviewItemSerializer(qs, many=True)
+        return Response(ser.data)

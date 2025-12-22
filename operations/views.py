@@ -1,29 +1,27 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import CrawlItemLog, CrawlJob
 from .serializers import (
     CrawlItemLogSerializer,
-    CrawlJobCreateSerializer,
     CrawlJobDetailSerializer,
     CrawlJobListSerializer,
 )
+from .services import run_crawl_job, run_status_refresh_job
 
 
 class AdminOnly(permissions.IsAdminUser):
     pass
 
 
-class CrawlJobListCreateView(generics.ListCreateAPIView):
+class CrawlJobListView(generics.ListAPIView):
     permission_classes = [AdminOnly]
+    serializer_class = CrawlJobListSerializer
 
     def get_queryset(self):
         return CrawlJob.objects.select_related("triggered_by").all()
-
-    def get_serializer_class(self):
-        if self.request.method.lower() == "post":
-            return CrawlJobCreateSerializer
-        return CrawlJobListSerializer
 
 
 class CrawlJobDetailView(generics.RetrieveAPIView):
@@ -49,3 +47,41 @@ class CrawlItemLogListView(generics.ListAPIView):
         if job_id:
             qs = qs.filter(job_id=job_id)
         return qs.order_by("-created_at")
+
+
+class RunCourtCrawlJobView(APIView):
+    permission_classes = [AdminOnly]
+
+    def post(self, request):
+        user = request.user if request.user.is_authenticated else None
+        job = run_crawl_job(source="court", triggered_by=user)
+        data = CrawlJobDetailSerializer(job).data
+        return Response(data, status=status.HTTP_201_CREATED)
+
+
+class RunOnbidCrawlJobView(APIView):
+    permission_classes = [AdminOnly]
+
+    def post(self, request):
+        user = request.user if request.user.is_authenticated else None
+        job = run_crawl_job(source="onbid", triggered_by=user)
+        data = CrawlJobDetailSerializer(job).data
+        return Response(data, status=status.HTTP_201_CREATED)
+
+
+class RunStatusRefreshJobView(APIView):
+
+    permission_classes = [AdminOnly]
+
+    def post(self, request):
+        source = request.data.get("source")
+        if source not in (None, "", "court", "onbid"):
+            return Response(
+                {"detail": "source는 'court', 'onbid' 또는 생략 가능"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        normalized_source = source or None
+        job = run_status_refresh_job(source=normalized_source)
+        data = CrawlJobDetailSerializer(job).data
+        return Response(data, status=status.HTTP_201_CREATED)

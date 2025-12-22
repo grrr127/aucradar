@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from auctions.models import CategoryLarge, CategoryMiddle, CategorySmall
+from auctions.models import AuctionItem, CategoryLarge, CategoryMiddle, CategorySmall
 
 from .models import AlertPreference, NotificationLog
 
@@ -95,4 +95,25 @@ class NotificationLogSerializer(serializers.ModelSerializer):
             "sent_at",
             "created_at",
             "updated_at",
+        ]
+
+
+class AlertPreviewItemSerializer(serializers.ModelSerializer):
+    large_name = serializers.CharField(source="large.name", read_only=True)
+    middle_name = serializers.CharField(source="middle.name", read_only=True)
+    small_name = serializers.CharField(source="small.name", read_only=True)
+
+    class Meta:
+        model = AuctionItem
+        fields = [
+            "id",
+            "source",
+            "title",
+            "location",
+            "auction_date",
+            "min_bid_price",
+            "num_failures",
+            "large_name",
+            "middle_name",
+            "small_name",
         ]

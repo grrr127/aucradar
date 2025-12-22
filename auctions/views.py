@@ -1,5 +1,7 @@
 from django.db.models import Q
+from django.utils.dateparse import parse_date
 from rest_framework import generics, permissions, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -46,16 +48,19 @@ class CategorySmallListView(generics.ListAPIView):
         return qs
 
 
+class AuctionItemPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
 class AuctionItemListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = AuctionItemListSerializer
+    pagination_class = AuctionItemPagination
 
     def get_queryset(self):
-        qs = (
-            AuctionItem.objects.select_related("large", "middle", "small")
-            .all()
-            .order_by("-created_at")
-        )
+        qs = AuctionItem.objects.select_related("large", "middle", "small").all()
 
         params = self.request.query_params
 
@@ -67,6 +72,9 @@ class AuctionItemListView(generics.ListAPIView):
         min_price = params.get("min_price")
         max_price = params.get("max_price")
         keyword = params.get("keyword")
+
+        auction_date_from = params.get("auction_date_from")
+        auction_date_to = params.get("auction_date_to")
 
         if source:
             qs = qs.filter(source=source)
@@ -82,14 +90,42 @@ class AuctionItemListView(generics.ListAPIView):
             qs = qs.filter(small_id=small_id)
 
         if min_price:
-            qs = qs.filter(min_bid_price__gte=min_price)
+            try:
+                qs = qs.filter(min_bid_price__gte=int(min_price))
+            except ValueError:
+                pass
         if max_price:
-            qs = qs.filter(min_bid_price__lte=max_price)
+            try:
+                qs = qs.filter(min_bid_price__lte=int(max_price))
+            except ValueError:
+                pass
+
+        if auction_date_from:
+            d_from = parse_date(auction_date_from)
+            if d_from:
+                qs = qs.filter(auction_date__gte=d_from)
+
+        if auction_date_to:
+            d_to = parse_date(auction_date_to)
+            if d_to:
+                qs = qs.filter(auction_date__lte=d_to)
 
         if keyword:
             qs = qs.filter(Q(title__icontains=keyword) | Q(location__icontains=keyword))
 
-        return qs
+        ordering = params.get("ordering") or "-auction_date"
+        allowed_orderings = {
+            "auction_date",
+            "-auction_date",
+            "min_bid_price",
+            "-min_bid_price",
+            "created_at",
+            "-created_at",
+        }
+        if ordering not in allowed_orderings:
+            ordering = "-auction_date"
+
+        return qs.order_by(ordering)
 
 
 class AuctionItemDetailView(generics.RetrieveAPIView):
