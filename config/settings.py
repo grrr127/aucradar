@@ -18,7 +18,11 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env.bool("DJANGO_DEBUG")
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "3.34.134.210",
+    "localhost",
+    "127.0.0.1",
+]
 
 AUTH_USER_MODEL = "users.User"
 
