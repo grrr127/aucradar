@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import environ
@@ -32,6 +33,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "django_extensions",
+    "rest_framework_simplejwt",
     "users",
     "auctions",
     "alerts",
@@ -129,7 +131,9 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.SessionAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.AllowAny",),
 }
 
 SPECTACULAR_SETTINGS = {
@@ -137,3 +141,17 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "경·공매 건물 모니터링/알림 서비스 API",
     "VERSION": "0.1.0",
 }
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+ONBID_SERVICE_KEY = os.getenv("ONBID_SERVICE_KEY", "")
