@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     "core",
     "operations",
 ]
+if DEBUG:
+    INSTALLED_APPS += ["django_extensions"]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
