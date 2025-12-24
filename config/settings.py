@@ -18,11 +18,7 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env.bool("DJANGO_DEBUG")
 
 
-ALLOWED_HOSTS = [
-    "3.34.134.210",
-    "localhost",
-    "127.0.0.1",
-]
+ALLOWED_HOSTS = ["*"]
 
 AUTH_USER_MODEL = "users.User"
 
@@ -127,6 +123,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
