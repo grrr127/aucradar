@@ -1,250 +1,63 @@
 {% extends "core/base.html" %}
-
-{% block title %}AucRadar | 대시보드{% endblock %}
-
-{% block extra_head %}
-<style>
-  .section{margin-top:18px}
-  .row{
-    margin-top:18px;
-    display:grid;
-    grid-template-columns: 1.05fr .95fr;
-    gap:16px;
-  }
-  .muted{color:var(--muted)}
-  .topbar{
-    display:flex; align-items:flex-start; justify-content:space-between;
-    gap:12px; flex-wrap:wrap;
-  }
-  .topbar h1{margin:0; font-size:28px; letter-spacing:-.3px}
-  .topbar p{margin:6px 0 0; color:var(--muted); line-height:1.6}
-  .btnrow{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-  .btn.small{padding:10px 12px; border-radius:12px; font-size:13px}
-
-  .stats{
-    display:grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap:12px;
-    margin-top:14px;
-  }
-  .stat{
-    padding:14px;
-    border-radius:16px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.03);
-  }
-  .stat .label{font-size:12px;color:var(--muted)}
-  .stat .value{margin-top:6px;font-size:22px;font-weight:900}
-  .stat .hint{margin-top:6px;font-size:12px;color:var(--muted);line-height:1.4}
-
-  .panel{
-    padding:18px;
-    border-radius:18px;
-    border:1px solid var(--line);
-    background: rgba(15,23,48,.55);
-    backdrop-filter: blur(10px);
-  }
-  .panel .title{margin:0 0 12px;font-weight:900;font-size:16px}
-  .list{display:grid; gap:10px}
-  .item{
-    padding:12px 14px;
-    border-radius:14px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.03);
-  }
-  .item .head{
-    display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;
-  }
-  .item .name{font-weight:900}
-  .badge{
-    display:inline-flex; align-items:center; gap:8px;
-    padding:7px 10px;
-    border:1px solid var(--line);
-    border-radius:999px;
-    background: rgba(255,255,255,.03);
-    color: var(--muted);
-    font-size: 12px;
-    white-space:nowrap;
-  }
-  .badge.ok{border-color: rgba(103,240,200,.25); background: rgba(103,240,200,.08)}
-  .badge.warn{border-color: rgba(255,107,107,.25); background: rgba(255,107,107,.08)}
-  .meta{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.5}
-  .actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
-  .actions a{font-size:13px}
-
-  .split{
-    display:grid;
-    grid-template-columns: 1fr;
-    gap:12px;
-  }
-  .callout{
-    padding:14px;
-    border-radius:16px;
-    border:1px solid rgba(110,168,255,.22);
-    background: rgba(110,168,255,.08);
-  }
-  .callout b{display:block;margin-bottom:6px}
-  .callout p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
-
-  .quick{
-    display:grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap:10px;
-  }
-  .q{
-    padding:12px 14px;
-    border-radius:14px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.03);
-  }
-  .q b{display:block;margin-bottom:6px}
-  .q p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
-
-  .empty{
-    padding:14px;
-    border-radius:14px;
-    border:1px dashed rgba(255,255,255,.18);
-    background: rgba(255,255,255,.02);
-    color: var(--muted);
-    font-size:14px;
-    line-height:1.6;
-  }
-
-  @media (max-width: 900px){
-    .row{grid-template-columns:1fr}
-    .stats{grid-template-columns:1fr}
-    .quick{grid-template-columns:1fr}
-  }
-</style>
-{% endblock %}
+{% block title %}대시보드 · AucRadar{% endblock %}
 
 {% block content %}
-<section class="card">
-  <div class="topbar">
-    <div>
-      <h1>대시보드</h1>
-      <p>
-        관심 물건의 최근 변동과 알림 상태를 한눈에 확인합니다.
-        (현재 화면은 UI 초안이며, 데이터는 추후 연동합니다.)
-      </p>
-    </div>
-    <div class="btnrow">
-      <a class="btn small" href="/watchlist/">관심 물건</a>
-      <a class="btn small" href="/alerts/">알림 설정</a>
-      <a class="btn small primary" href="/api/docs/">API Docs</a>
-    </div>
-  </div>
-
-  <div class="stats">
-    <div class="stat">
-      <div class="label">관심 물건</div>
-      <div class="value">—</div>
-      <div class="hint">watchlist 개수</div>
-    </div>
-    <div class="stat">
-      <div class="label">오늘 감지된 변동</div>
-      <div class="value">—</div>
-      <div class="hint">상태/기일/가격 변경</div>
-    </div>
-    <div class="stat">
-      <div class="label">활성 알림</div>
-      <div class="value">—</div>
-      <div class="hint">켜져 있는 알림 룰</div>
-    </div>
-  </div>
-</section>
-
-<section class="row">
-  <!-- Left: Recent changes -->
-  <div class="panel">
-    <p class="title">최근 변동</p>
-
-    <div class="list">
-      <!-- 샘플 아이템: 실제 데이터 연동 시 반복 렌더링 -->
-      <div class="item">
-        <div class="head">
-          <div class="name">[샘플] 서울중앙지법 · 사건 2025타경12345</div>
-          <span class="badge ok">변동: 가격</span>
-        </div>
-        <div class="meta">
-          변경 내용: <b>최저가 3.2억 → 2.9억</b><br/>
-          감지 시각: 2025-12-26 13:10 (KST)
-        </div>
-        <div class="actions">
-          <a class="btn small" href="/watchlist/">watchlist에서 보기</a>
-          <a class="btn small" href="/alerts/">이벤트 알림 추가</a>
-        </div>
-      </div>
-
-      <div class="item">
-        <div class="head">
-          <div class="name">[샘플] 수원지법 · 사건 2025타경67890</div>
-          <span class="badge warn">변동: 일정</span>
-        </div>
-        <div class="meta">
-          변경 내용: <b>기일 변경</b> (예정일이 변경되었습니다)<br/>
-          감지 시각: 2025-12-26 12:42 (KST)
-        </div>
-        <div class="actions">
-          <a class="btn small" href="/watchlist/">watchlist에서 보기</a>
-          <a class="btn small" href="/alerts/">이 일정만 알림</a>
-        </div>
-      </div>
-
-      <!-- 데이터가 없을 때 보여줄 UI -->
-      <div class="empty">
-        아직 표시할 변동이 없습니다.<br/>
-        관심 물건을 추가하면 변동이 감지될 때 여기에 쌓입니다.
-      </div>
-    </div>
-  </div>
-
-  <!-- Right: Status & quick actions -->
-  <div class="split">
-    <div class="panel">
-      <p class="title">상태</p>
-      <div class="callout">
-        <b>서비스 상태: 정상</b>
-        <p>
-          수집/감지 파이프라인이 동작 중입니다.<br/>
-          문제 발생 시 contact로 알려주시면 빠르게 확인하겠습니다.
+<section class="hero" style="grid-template-columns: 1fr; margin-top:22px;">
+  <div class="card">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+      <div>
+        <h1 class="h1" style="font-size:34px; margin-bottom:10px;">대시보드</h1>
+        <p class="sub" style="margin-bottom:0;">
+          <b>{{ user.username }}</b> 님의 관심 물건/알림 상태를 한 번에 확인합니다.
         </p>
       </div>
-
-      <div class="section" style="margin-top:12px">
-        <p class="title" style="margin:0 0 10px">빠른 작업</p>
-        <div class="quick">
-          <div class="q">
-            <b>관심 물건 추가</b>
-            <p>사건번호/링크를 저장해서 추적을 시작합니다.</p>
-            <div class="actions"><a class="btn small primary" href="/watchlist/">추가하기</a></div>
-          </div>
-          <div class="q">
-            <b>알림 룰 설정</b>
-            <p>가격/기일/상태 변경 등 원하는 이벤트만 선택합니다.</p>
-            <div class="actions"><a class="btn small" href="/alerts/">설정하기</a></div>
-          </div>
-          <div class="q">
-            <b>내 정보</b>
-            <p>프로필/연락처/알림 채널을 관리합니다.</p>
-            <div class="actions"><a class="btn small" href="/profile/">열기</a></div>
-          </div>
-          <div class="q">
-            <b>API 문서</b>
-            <p>엔드포인트/스키마 확인 및 테스트.</p>
-            <div class="actions"><a class="btn small" href="/api/docs/">보기</a></div>
-          </div>
-        </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn" href="/api/docs/">API Docs</a>
+        <a class="btn primary" href="/alerts/">알림 설정</a>
       </div>
     </div>
 
-    <div class="panel">
-      <p class="title">참고</p>
-      <div class="muted" style="font-size:14px;line-height:1.7">
-        지금 단계에서는 “화면 골격”을 먼저 완성하고,
-        이후에 users/auth, watchlist, alerts API를 붙이는 순서가 가장 빠릅니다.<br/><br/>
-        다음으로 만들 페이지:
-        <code>/watchlist/</code>, <code>/alerts/</code>, <code>/profile/</code>
+    <div class="grid" style="margin-top:18px;">
+      <div class="feature">
+        <b>관심 물건</b>
+        <p>watchlist 화면 연결 전입니다. 우선은 API로 조회할 수 있게 붙일 예정입니다.</p>
+        <div class="cta" style="margin-top:10px;">
+          <a class="btn" href="/watchlist/">목록 보기</a>
+        </div>
+      </div>
+
+      <div class="feature">
+        <b>알림</b>
+        <p>가격/상태 변경, 마감 임박 등을 조건 기반으로 알림 받습니다.</p>
+        <div class="cta" style="margin-top:10px;">
+          <a class="btn" href="/alerts/">설정 관리</a>
+        </div>
+      </div>
+
+      <div class="feature">
+        <b>작업 상태</b>
+        <p>크롤링/스케줄러/운영 작업 상태를 점검합니다(추후 운영 페이지로 확장).</p>
+        <div class="cta" style="margin-top:10px;">
+          <a class="btn" href="/admin/">Admin</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 10px; font-size:18px;">다음 할 일 (MVP 로드맵)</h2>
+    <div class="kpi">
+      <div class="box">
+        <div class="label">1) Watchlist 화면</div>
+        <div class="value">관심 물건 추가/삭제, 필터</div>
+      </div>
+      <div class="box">
+        <div class="label">2) Alerts 화면</div>
+        <div class="value">키워드/지역/가격 조건 + 채널 선택</div>
+      </div>
+      <div class="box">
+        <div class="label">3) Profile 화면</div>
+        <div class="value">내 정보/비밀번호 변경</div>
       </div>
     </div>
   </div>
