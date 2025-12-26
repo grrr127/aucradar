@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+{% block title %}회원가입 · AucRadar{% endblock %}
+
+{% block content %}
+<section class="hero" style="grid-template-columns:1fr; max-width:720px; margin:22px auto 0;">
+  <div class="card">
+    <h1 class="h1" style="font-size:34px;">회원가입</h1>
+    <p class="sub">30초만에 계정을 만들고 관심 물건/알림을 설정하세요.</p>
+
+    <form method="post" style="display:grid; gap:12px; margin-top:14px;">
+      {% csrf_token %}
+
+      <div class="feature">
+        <b>아이디</b>
+        {{ form.username }}
+        {% if form.username.errors %}<p style="color:var(--danger); margin:8px 0 0;">{{ form.username.errors|striptags }}</p>{% endif %}
+      </div>
+
+      <div class="feature">
+        <b>비밀번호</b>
+        {{ form.password1 }}
+        {% if form.password1.errors %}<p style="color:var(--danger); margin:8px 0 0;">{{ form.password1.errors|striptags }}</p>{% endif %}
+      </div>
+
+      <div class="feature">
+        <b>비밀번호 확인</b>
+        {{ form.password2 }}
+        {% if form.password2.errors %}<p style="color:var(--danger); margin:8px 0 0;">{{ form.password2.errors|striptags }}</p>{% endif %}
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="feature" style="border-color: rgba(255,107,107,.35);">
+          <p style="color:var(--danger); margin:0;">{{ form.non_field_errors|striptags }}</p>
+        </div>
+      {% endif %}
+
+      <button class="btn primary" type="submit" style="width:100%;">계정 만들기</button>
+      <a class="btn" href="{% url 'login' %}" style="text-align:center;">이미 계정이 있어요 → 로그인</a>
+    </form>
+  </div>
+</section>
+{% endblock %}
