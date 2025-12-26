@@ -1,0 +1,39 @@
+{% extends "core/base.html" %}
+{% block title %}AucRadar | 로그인{% endblock %}
+
+{% block content %}
+<section class="card" style="margin-top:22px; max-width:520px; margin-left:auto; margin-right:auto;">
+  <h1 class="h1" style="font-size:32px;">로그인</h1>
+  <p class="sub">AucRadar 대시보드 및 알림 기능을 이용하려면 로그인하세요.</p>
+
+  {% if form.errors %}
+  <div class="feature" style="margin-bottom:12px; border-color: rgba(255,107,107,.3); background: rgba(255,107,107,.08);">
+    <b>로그인 실패</b>
+    <p>아이디 또는 비밀번호가 올바르지 않습니다.</p>
+  </div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="grid" style="grid-template-columns:1fr;">
+      <div class="feature">
+        <b>아이디</b>
+        <input type="text" name="username" autofocus required
+               style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--line); background:#0b1020; color:white;">
+      </div>
+
+      <div class="feature">
+        <b>비밀번호</b>
+        <input type="password" name="password" required
+               style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--line); background:#0b1020; color:white;">
+      </div>
+    </div>
+
+    <div class="cta" style="margin-top:14px;">
+      <button class="btn primary" type="submit">로그인</button>
+      <a class="btn" href="/accounts/password_reset/">비밀번호 재설정</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

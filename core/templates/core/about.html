@@ -1,0 +1,78 @@
+{% extends "core/base.html" %}
+
+{% block title %}AucRadar | 서비스 소개{% endblock %}
+
+{% block extra_head %}
+<style>
+  .section{margin-top:18px}
+  .lead{margin:0;color:var(--muted);font-size:16px;line-height:1.7}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .box{
+    padding:16px;border-radius:16px;border:1px solid var(--line);
+    background: rgba(255,255,255,.03);
+  }
+  .box b{display:block;margin-bottom:6px}
+  .box p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
+  .timeline{display:grid;gap:10px;margin-top:12px}
+  .item{padding:14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
+  .item .t{font-weight:900;margin-bottom:6px}
+  .item .d{color:var(--muted);font-size:14px;line-height:1.6}
+  @media (max-width:900px){.grid2{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="card">
+  <h1 class="h1" style="font-size:36px">서비스 소개</h1>
+  <p class="lead">
+    AucRadar는 경·공매 물건의 “변화”를 놓치지 않기 위해 만든 모니터링/알림 서비스입니다.
+    관심 물건을 저장해두면, 상태·기일·가격 등 주요 변동을 감지해 기록하고 안내합니다.
+  </p>
+</section>
+
+<section class="section">
+  <div class="grid2">
+    <div class="box">
+      <b>문제</b>
+      <p>정보가 흩어져 있고, 업데이트가 잦아 수동으로 추적하면 누락이 발생합니다.</p>
+    </div>
+    <div class="box">
+      <b>해결</b>
+      <p>관심 물건을 한 곳에 모으고, 변경만 추려서 “읽기 쉬운 형태”로 제공합니다.</p>
+    </div>
+    <div class="box">
+      <b>원칙</b>
+      <p>정확성(원문 기반), 최소 알림(중요 이벤트 중심), 투명성(수집/갱신 정책 명시)을 지향합니다.</p>
+    </div>
+    <div class="box">
+      <b>대상</b>
+      <p>초보 투자자, 실무자, 또는 개인적으로 경·공매 정보를 모니터링하고 싶은 모든 사용자.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <p class="title">로드맵 (초안)</p>
+    <div class="timeline">
+      <div class="item">
+        <div class="t">1) 안정적인 데이터 파이프라인</div>
+        <div class="d">수집/갱신 실패율을 낮추고, 변동 감지 정확도를 높입니다.</div>
+      </div>
+      <div class="item">
+        <div class="t">2) Watchlist + 변동 히스토리 강화</div>
+        <div class="d">물건별 타임라인, 변경 이유(가능한 범위), 필터/검색을 추가합니다.</div>
+      </div>
+      <div class="item">
+        <div class="t">3) 알림 채널 확장</div>
+        <div class="d">이메일/메신저/웹훅 등 사용자 환경에 맞는 알림 채널을 제공합니다.</div>
+      </div>
+    </div>
+
+    <div class="cta" style="margin-top:14px">
+      <a class="btn primary" href="/contact/">문의/피드백 남기기</a>
+      <a class="btn" href="/features/">기능 보기</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

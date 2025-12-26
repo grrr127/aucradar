@@ -1,0 +1,101 @@
+{% extends "core/base.html" %}
+
+{% block title %}AucRadar | 기능{% endblock %}
+
+{% block extra_head %}
+<style>
+  .section{margin-top:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .f{
+    padding:16px;border-radius:16px;border:1px solid var(--line);
+    background: rgba(255,255,255,.03);
+  }
+  .f b{display:block;margin-bottom:8px;font-size:15px}
+  .f p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
+  .note{
+    margin-top:12px;
+    padding:14px;border-radius:14px;border:1px solid var(--line);
+    background: rgba(255,255,255,.03);
+    color: var(--muted);
+    font-size:14px; line-height:1.6;
+  }
+  .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+  .chip{
+    padding:12px;border-radius:14px;border:1px solid var(--line);
+    background: rgba(255,255,255,.03);
+  }
+  .chip .k{font-weight:900;margin-bottom:6px}
+  .chip .d{color:var(--muted);font-size:13px;line-height:1.5}
+  @media (max-width:900px){
+    .grid3{grid-template-columns:1fr}
+    .flow{grid-template-columns:1fr}
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="card">
+  <h1 class="h1" style="font-size:36px">기능</h1>
+  <p class="sub" style="margin:0">
+    “모든 정보를 다 보여주기”보다, 사용자가 실제로 필요로 하는 <b>변화</b>와 <b>행동</b>에 초점을 둡니다.
+  </p>
+</section>
+
+<section class="section">
+  <div class="grid3">
+    <div class="f">
+      <b>관심 물건(Watchlist)</b>
+      <p>물건을 저장하고, 한 화면에서 현재 상태를 확인할 수 있도록 구성합니다.</p>
+    </div>
+    <div class="f">
+      <b>변경 감지</b>
+      <p>상태/기일/가격 등 주요 변동을 감지해 기록하고, 사용자에게 보여줍니다.</p>
+    </div>
+    <div class="f">
+      <b>알림 설정</b>
+      <p>원하는 이벤트만 선택하여 불필요한 알림을 줄입니다.</p>
+    </div>
+    <div class="f">
+      <b>필터/검색 (예정)</b>
+      <p>지역/법원/일정/금액대 등으로 빠르게 탐색할 수 있도록 확장합니다.</p>
+    </div>
+    <div class="f">
+      <b>운영 로그 (운영자)</b>
+      <p>수집/갱신 상태를 확인하고 장애를 빠르게 파악할 수 있도록 합니다.</p>
+    </div>
+    <div class="f">
+      <b>API 문서</b>
+      <p>DRF + Swagger로 API를 확인하고 연동할 수 있습니다. <a href="/api/docs/" style="text-decoration:underline">/api/docs/</a></p>
+    </div>
+  </div>
+
+  <div class="note">
+    참고: 기능 구현 순서는 “안정성 → 사용성 → 확장성”입니다.
+    우선 변동 감지 정확도를 올리고, 이후 화면/필터/알림 채널을 단계적으로 확장합니다.
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <p class="title">데이터 흐름</p>
+    <div class="flow">
+      <div class="chip">
+        <div class="k">수집</div>
+        <div class="d">원문 기반으로 정보를 읽어옵니다.</div>
+      </div>
+      <div class="chip">
+        <div class="k">정규화</div>
+        <div class="d">필드/형식을 통일해 저장합니다.</div>
+      </div>
+      <div class="chip">
+        <div class="k">변경 비교</div>
+        <div class="d">이전 값과 비교해 변동을 식별합니다.</div>
+      </div>
+      <div class="chip">
+        <div class="k">노출/알림</div>
+        <div class="d">핵심 변동만 화면/알림으로 제공합니다.</div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

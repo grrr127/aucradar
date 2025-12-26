@@ -159,3 +159,7 @@ CACHES = {
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 ONBID_SERVICE_KEY = os.getenv("ONBID_SERVICE_KEY", "")
+
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/dashboard/"
+LOGOUT_REDIRECT_URL = "/"
