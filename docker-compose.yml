@@ -44,8 +44,11 @@ services:
       - web
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./deploy/nginx/aucradar.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./deploy/certbot/www:/var/www/certbot
+      - /etc/letsencrypt:/etc/letsencrypt:ro
       - staticfiles:/staticfiles:ro
     restart: unless-stopped
 
