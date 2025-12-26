@@ -25,3 +25,18 @@ def contact(request):
 @login_required
 def dashboard(request):
     return render(request, "core/dashboard.html")
+
+
+@login_required
+def watchlist(request):
+    return render(request, "core/watchlist.html")
+
+
+@login_required
+def alerts(request):
+    return render(request, "core/alerts.html")
+
+
+@login_required
+def profile(request):
+    return render(request, "core/profile.html")

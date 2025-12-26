@@ -1,0 +1,164 @@
+{% extends "core/base.html" %}
+
+{% block title %}AucRadar | 알림 설정{% endblock %}
+
+{% block extra_head %}
+<style>
+  .section{margin-top:18px}
+  .muted{color:var(--muted)}
+  .layout{
+    margin-top:18px;
+    display:grid;
+    grid-template-columns:1.05fr .95fr;
+    gap:16px;
+  }
+  .top h1{margin:0;font-size:28px;letter-spacing:-.3px}
+  .top p{margin:8px 0 0;line-height:1.6;color:var(--muted)}
+  .rules{display:grid;gap:10px}
+  .rule{
+    padding:14px;
+    border-radius:16px;
+    border:1px solid var(--line);
+    background: rgba(255,255,255,.03);
+  }
+  .rule .head{
+    display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;
+  }
+  .rule .name{font-weight:900}
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:7px 10px;border-radius:999px;
+    border:1px solid var(--line);
+    background: rgba(255,255,255,.03);
+    color: var(--muted); font-size:12px; white-space:nowrap;
+  }
+  .badge.on{border-color:rgba(103,240,200,.25);background:rgba(103,240,200,.08)}
+  .badge.off{border-color:rgba(255,107,107,.25);background:rgba(255,107,107,.08)}
+  .meta{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.6}
+  .actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .actions a{font-size:13px}
+  .panel{
+    padding:16px;border-radius:18px;border:1px solid var(--line);
+    background: rgba(15,23,48,.55);
+    backdrop-filter: blur(10px);
+  }
+  .panel .title{margin:0 0 10px;font-weight:900;font-size:16px}
+  .panel p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
+  .channels{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px;
+  }
+  .chip{
+    padding:12px 14px;border-radius:14px;border:1px solid var(--line);
+    background: rgba(255,255,255,.03);
+  }
+  .chip b{display:block;margin-bottom:6px}
+  .chip p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+  .empty{
+    padding:14px;
+    border-radius:14px;
+    border:1px dashed rgba(255,255,255,.18);
+    background: rgba(255,255,255,.02);
+    color: var(--muted);
+    font-size:14px;
+    line-height:1.6;
+  }
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr}
+    .channels{grid-template-columns:1fr}
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="card">
+  <div class="top">
+    <h1>알림 설정</h1>
+    <p>변동 이벤트를 선택해 필요한 알림만 받아보세요. 이후 이메일/메신저 채널도 연결할 예정입니다.</p>
+  </div>
+
+  <div class="actions" style="margin-top:12px;">
+    <a class="btn primary" href="/alerts/new/">새 알림 만들기</a>
+    <a class="btn" href="/watchlist/">watchlist로 이동</a>
+  </div>
+</section>
+
+<section class="layout">
+  <div class="card">
+    <p class="title" style="font-size:16px;font-weight:900;margin:0 0 10px;">알림 룰</p>
+    <div class="rules">
+      <div class="rule">
+        <div class="head">
+          <div>
+            <div class="name">[샘플] 가격 변동 알림</div>
+            <div class="muted" style="font-size:13px;">watchlist 전체 · 최저가/감정가 변경</div>
+          </div>
+          <span class="badge on">ON</span>
+        </div>
+        <div class="meta">
+          조건: 가격 변동 발생 시 즉시 알림<br/>
+          채널: 이메일 (곧 추가될 메신저/웹훅 포함 예정)
+        </div>
+        <div class="actions">
+          <a class="btn small primary" href="/alerts/edit/">수정</a>
+          <a class="btn small" href="/alerts/">비활성화</a>
+        </div>
+      </div>
+
+      <div class="rule">
+        <div class="head">
+          <div>
+            <div class="name">[샘플] 일정 변경 알림</div>
+            <div class="muted" style="font-size:13px;">특정 사건 · 기일 변경만</div>
+          </div>
+          <span class="badge off">OFF</span>
+        </div>
+        <div class="meta">
+          조건: 지정한 사건의 매각기일이 변동될 때 알림<br/>
+          채널: (꺼짐) 이메일
+        </div>
+        <div class="actions">
+          <a class="btn small" href="/alerts/">활성화</a>
+          <a class="btn small" href="/watchlist/">watchlist 보기</a>
+        </div>
+      </div>
+
+      <div class="empty">
+        아직 생성한 알림 룰이 없습니다.<br/>
+        “새 알림 만들기” 버튼으로 가격/일정/상태 등 원하는 조건을 추가해 보세요.
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <p class="title">알림 채널</p>
+    <p>지금은 기본 이메일 알림만 제공하지만, 베타 피드백에 따라 채널을 확장합니다.</p>
+
+    <div class="channels">
+      <div class="chip">
+        <b>이메일</b>
+        <p>계정 이메일로 알림. 기본 채널로 곧 연결됩니다.</p>
+      </div>
+      <div class="chip">
+        <b>메신저(예정)</b>
+        <p>Slack/Discord/카카오톡 등 팀 협업 채널로 확장 예정.</p>
+      </div>
+      <div class="chip">
+        <b>웹훅(예정)</b>
+        <p>외부 시스템으로 알림 전달. 운영 자동화 시나리오에 활용.</p>
+      </div>
+      <div class="chip">
+        <b>SMS(검토)</b>
+        <p>긴급 알림용으로 검토 중입니다.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="title" style="margin:0 0 8px;">다음 작업</p>
+      <div class="actions" style="margin-top:6px;">
+        <a class="btn small" href="/profile/">알림 프로필</a>
+        <a class="btn small" href="/dashboard/">대시보드</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
