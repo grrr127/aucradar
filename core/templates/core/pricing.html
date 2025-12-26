@@ -1,0 +1,76 @@
+{% extends "core/base.html" %}
+
+{% block title %}AucRadar | 요금제{% endblock %}
+
+{% block extra_head %}
+<style>
+  .section{margin-top:18px}
+  .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+  .plan{
+    padding:18px;border-radius:18px;border:1px solid var(--line);
+    background: rgba(255,255,255,.03);
+  }
+  .plan .name{font-weight:900;font-size:16px}
+  .plan .price{font-size:26px;font-weight:900;margin-top:8px}
+  .plan ul{margin:12px 0 0;padding-left:18px;color:var(--muted);font-size:14px;line-height:1.7}
+  .banner{
+    margin-top:12px;
+    padding:14px;border-radius:16px;border:1px solid rgba(103,240,200,.25);
+    background: rgba(103,240,200,.08);
+    color: var(--text);
+  }
+  .banner b{display:block;margin-bottom:6px}
+  .banner p{margin:0;color:var(--muted)}
+  @media (max-width:900px){.plans{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="card">
+  <h1 class="h1" style="font-size:36px">요금제</h1>
+  <p class="sub" style="margin:0">
+    현재는 베타 운영 단계로 <b>요금제는 준비 중</b>입니다. 기능 안정화 후 합리적인 플랜으로 정리할 예정입니다.
+  </p>
+
+  <div class="banner">
+    <b>베타 참여/우선 알림</b>
+    <p>필요한 기능(알림 채널, 조건, 팀 공유 등)을 알려주시면 우선순위에 반영합니다.</p>
+    <div class="cta" style="margin-top:10px">
+      <a class="btn primary" href="/contact/">문의/피드백 남기기</a>
+      <a class="btn" href="/features/">기능 보기</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="plans">
+    <div class="plan">
+      <div class="name">Free (예정)</div>
+      <div class="price">₩0</div>
+      <ul>
+        <li>기본 watchlist</li>
+        <li>핵심 변동 확인</li>
+        <li>기본 알림(제한)</li>
+      </ul>
+    </div>
+    <div class="plan">
+      <div class="name">Pro (예정)</div>
+      <div class="price">준비중</div>
+      <ul>
+        <li>확장 watchlist</li>
+        <li>고급 알림 조건</li>
+        <li>변동 히스토리/필터 강화</li>
+      </ul>
+    </div>
+    <div class="plan">
+      <div class="name">Team (예정)</div>
+      <div class="price">준비중</div>
+      <ul>
+        <li>공유 watchlist</li>
+        <li>팀 알림/권한</li>
+        <li>운영/리포트</li>
+      </ul>
+    </div>
+  </div>
+</section>
+{% endblock %}

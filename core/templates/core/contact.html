@@ -1,0 +1,71 @@
+{% extends "core/base.html" %}
+
+{% block title %}AucRadar | 문의/피드백{% endblock %}
+
+{% block extra_head %}
+<style>
+  .section{margin-top:18px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .panel{
+    padding:16px;border-radius:16px;border:1px solid var(--line);
+    background: rgba(255,255,255,.03);
+  }
+  .panel b{display:block;margin-bottom:6px}
+  .panel p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
+  .mail{
+    margin-top:10px;
+    padding:12px 14px;
+    border-radius:14px;
+    border:1px solid rgba(110,168,255,.25);
+    background: rgba(110,168,255,.10);
+    display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;
+  }
+  .mail code{font-size:13px}
+  .hint{margin-top:10px;color:var(--muted);font-size:14px;line-height:1.6}
+  @media (max-width:900px){.grid2{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="card">
+  <h1 class="h1" style="font-size:36px">문의/피드백</h1>
+  <p class="sub" style="margin:0">
+    베타 참여 요청, 개선 아이디어, 버그 제보 모두 환영합니다.
+    가장 빠른 채널은 이메일입니다.
+  </p>
+
+  <div class="mail">
+    <div>
+      <div class="muted" style="font-size:13px">Contact</div>
+      <code>qrrr127@gmail.com</code>
+    </div>
+    <a class="btn primary" href="mailto:qrrr127@gmail.com?subject=AucRadar%20문의%2F피드백">메일 보내기</a>
+  </div>
+
+  <p class="hint">
+    가능하면 제목에 <code>[버그]</code>, <code>[기능요청]</code>, <code>[베타참여]</code> 같은 태그를 붙여 주세요.
+  </p>
+</section>
+
+<section class="section">
+  <div class="grid2">
+    <div class="panel">
+      <b>버그 제보 템플릿</b>
+      <p>
+        1) 어떤 페이지/기능에서?<br/>
+        2) 어떤 행동을 했을 때?<br/>
+        3) 기대 결과 vs 실제 결과<br/>
+        4) 발생 시간/스크린샷(가능하면)
+      </p>
+    </div>
+    <div class="panel">
+      <b>기능 요청 템플릿</b>
+      <p>
+        1) 어떤 사용 상황에서 필요한가요?<br/>
+        2) “어떤 알림/조건/화면”이 있으면 해결되나요?<br/>
+        3) 꼭 필요한 우선순위(높음/중간/낮음)
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

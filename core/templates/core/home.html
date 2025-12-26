@@ -1,55 +1,189 @@
 {% extends "core/base.html" %}
-{% block title %}AucRadar | Home{% endblock %}
+
+{% block title %}AucRadar | 홈{% endblock %}
+
+{% block extra_head %}
+<style>
+  .hero2{
+    margin-top:18px;
+    display:grid;
+    grid-template-columns: 1.15fr .85fr;
+    gap:16px;
+  }
+  .tagrow{display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 16px}
+  .tag{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:8px 10px; border-radius:999px;
+    border:1px solid var(--line);
+    background: rgba(255,255,255,.03);
+    color: var(--muted); font-size:13px;
+  }
+  .tag .k{color:var(--text); font-weight:800}
+  .muted{color:var(--muted)}
+  .split{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:12px;
+    margin-top:14px;
+  }
+  .step{padding:14px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03)}
+  .step .num{
+    width:26px;height:26px;border-radius:10px;
+    display:inline-flex;align-items:center;justify-content:center;
+    background: rgba(110,168,255,.18);
+    border:1px solid rgba(110,168,255,.28);
+    font-weight:900;
+    margin-bottom:10px;
+  }
+  .step b{display:block;margin-bottom:6px}
+  .step p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+
+  .shot{
+    height:320px;
+    border-radius:18px;
+    border:1px dashed rgba(255,255,255,.18);
+    background:
+      radial-gradient(600px 220px at 30% 20%, rgba(110,168,255,.18), transparent 65%),
+      radial-gradient(520px 260px at 70% 70%, rgba(103,240,200,.14), transparent 60%),
+      rgba(255,255,255,.03);
+    display:flex; align-items:center; justify-content:center;
+    text-align:center; padding:18px;
+  }
+  .shot b{display:block;font-size:16px;margin-bottom:6px}
+  .shot p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+  .shot code{opacity:.9}
+
+  .section{margin-top:18px}
+  .section .title{font-size:18px;font-weight:900;margin:0 0 10px}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .mini{
+    padding:14px;border-radius:14px;border:1px solid var(--line);
+    background: rgba(255,255,255,.03);
+  }
+  .mini b{display:block;margin-bottom:6px}
+  .mini p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+  .faq{margin-top:12px;display:grid;gap:10px}
+  details{
+    border:1px solid var(--line);
+    border-radius:14px;
+    background: rgba(255,255,255,.03);
+    padding:12px 14px;
+  }
+  summary{cursor:pointer;font-weight:800}
+  details p{margin:10px 0 0;color:var(--muted);font-size:14px;line-height:1.6}
+  .ctaRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  @media (max-width: 900px){
+    .hero2{grid-template-columns:1fr}
+    .split{grid-template-columns:1fr}
+    .cols{grid-template-columns:1fr}
+    .shot{height:260px}
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="hero">
+<section class="hero2">
   <div class="card">
-    <div class="badge">상태: 베타 · AWS 배포 완료</div>
-    <h1 class="h1">경·공매 물건,<br/>놓치기 전에 알림 받기</h1>
-    <p class="sub">
-      AucRadar는 관심 지역/조건에 맞는 물건을 모니터링하고, 변경 사항을 알림으로 전달하는 서비스입니다.
-      지금은 API 중심으로 운영되며, 홈 화면은 운영 상태와 진입 포인트를 제공하는 목적입니다.
-    </p>
-
-    <div class="cta" id="start">
-      <a class="btn primary" href="/api/docs/">Swagger로 API 보기</a>
-      <a class="btn" href="/admin/">관리자(Admin)</a>
-      <a class="btn" href="/api/schema/">OpenAPI Schema</a>
+    <div class="tagrow">
+      <span class="tag"><span class="k">자동</span> 변동 감지</span>
+      <span class="tag"><span class="k">정리</span> 관심 물건 목록</span>
+      <span class="tag"><span class="k">알림</span> 필요한 순간만</span>
     </div>
 
-    <div class="grid">
-      <div class="feature">
-        <b>모니터링</b>
-        <p>관심 조건에 맞는 공고/물건을 주기적으로 추적합니다.</p>
+    <h1 class="h1">경·공매 물건,<br/>변화만 빠르게 잡아내는 알림 서비스</h1>
+    <p class="sub">
+      관심 물건을 저장해두면 일정/상태/가격 변동을 모니터링하고,
+      중요한 이벤트만 추려서 알려줍니다.
+    </p>
+
+    <div class="ctaRow" id="start">
+      <a class="btn primary" href="/api/docs/">API로 시작하기</a>
+      <a class="btn" href="/features/">기능 보기</a>
+      <a class="btn" href="/contact/">베타 참여/문의</a>
+    </div>
+
+    <div class="split" style="margin-top:16px">
+      <div class="step">
+        <div class="num">1</div>
+        <b>관심 물건 등록</b>
+        <p>사건/물건 정보를 저장하고 watchlist로 관리합니다.</p>
       </div>
-      <div class="feature">
-        <b>알림</b>
-        <p>변경/신규 등록 시 빠르게 확인할 수 있도록 알림을 제공합니다.</p>
+      <div class="step">
+        <div class="num">2</div>
+        <b>변경 자동 감지</b>
+        <p>상태/기일/가격 변동을 감지해 기록으로 남깁니다.</p>
       </div>
-      <div class="feature">
-        <b>운영 자동화</b>
-        <p>크론/작업(operations) 기반으로 수집·정제를 자동화합니다.</p>
+      <div class="step">
+        <div class="num">3</div>
+        <b>알림 수신</b>
+        <p>중요 이벤트 발생 시 즉시 확인할 수 있도록 안내합니다.</p>
       </div>
     </div>
   </div>
 
-  <aside class="card kpi">
-    <div class="box">
-      <div class="label">서비스 엔드포인트</div>
-      <div class="value">/api/*</div>
+  <div class="card">
+    <div class="shot">
+      <div>
+        <b>스크린샷/미리보기 영역 (추후 교체)</b>
+        <p>
+          여기에 대시보드/관심목록/알림설정 화면 캡처를 넣으면<br/>
+          랜딩페이지 신뢰도가 확 올라갑니다.
+        </p>
+        <p style="margin-top:10px" class="muted">
+          예: <code>/dashboard/</code> · <code>/watchlist/</code> · <code>/alerts/</code>
+        </p>
+      </div>
     </div>
-    <div class="box">
-      <div class="label">관리 페이지</div>
-      <div class="value">/admin/</div>
+
+    <div class="section">
+      <p class="title">현재 상태</p>
+      <div class="kpi">
+        <div class="box">
+          <div class="label">API 문서</div>
+          <div class="value"><a href="/api/docs/">/api/docs/</a></div>
+        </div>
+        <div class="box">
+          <div class="label">관리자</div>
+          <div class="value"><a href="/admin/">/admin/</a></div>
+        </div>
+        <div class="box">
+          <div class="label">스키마</div>
+          <div class="value"><a href="/api/schema/">/api/schema/</a></div>
+        </div>
+      </div>
     </div>
-    <div class="box">
-      <div class="label">API 문서</div>
-      <div class="value">/api/docs/</div>
+  </div>
+</section>
+
+<section class="section">
+  <p class="title">왜 AucRadar인가요</p>
+  <div class="cols">
+    <div class="mini">
+      <b>놓치기 쉬운 변경사항</b>
+      <p>공고 정보는 흩어져 있고, 상태는 자주 바뀝니다. 중요한 순간에 놓치면 비용이 커집니다.</p>
     </div>
-    <div class="box">
-      <div class="label">현재</div>
-      <div class="value">MVP 배포</div>
+    <div class="mini">
+      <b>변화만 “요약”해서 전달</b>
+      <p>모든 데이터를 다 보여주기보다, 사용자에게 의미 있는 “변동”만 선별해 전달하는 것을 목표로 합니다.</p>
     </div>
-  </aside>
+  </div>
+</section>
+
+<section class="section">
+  <p class="title">FAQ</p>
+  <div class="faq">
+    <details>
+      <summary>무료인가요?</summary>
+      <p>현재는 베타 단계로, 요금제는 준비 중입니다. 기능 안정화 후 플랜을 정리할 예정입니다.</p>
+    </details>
+    <details>
+      <summary>알림은 어떤 방식으로 오나요?</summary>
+      <p>현재는 기본 알림 흐름을 구축 중이며, 향후 이메일/메신저 등으로 확장할 수 있습니다. 필요하신 채널이 있으면 문의로 알려주세요.</p>
+    </details>
+    <details>
+      <summary>데이터는 어디에서 오나요?</summary>
+      <p>서비스는 원문 기반으로 정보를 정리하고, 변경 감지/기록을 제공합니다. 중요한 의사결정 전에는 항상 원문 링크 확인을 권장합니다.</p>
+    </details>
+  </div>
 </section>
 {% endblock %}
