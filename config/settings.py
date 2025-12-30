@@ -159,7 +159,8 @@ CACHES = {
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-ONBID_SERVICE_KEY = os.getenv("ONBID_SERVICE_KEY", "")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 
 LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/dashboard/"

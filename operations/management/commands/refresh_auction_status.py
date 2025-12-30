@@ -13,8 +13,8 @@ class Command(BaseCommand):
         parser.add_argument(
             "--source",
             type=str,
-            choices=["court", "onbid"],
-            help="court 또는 onbid (생략하면 둘 다 대상)",
+            choices=["court"],
+            help="court 또는 생략 (생략시 기본값 court)",
         )
         parser.add_argument(
             "--note",
@@ -29,8 +29,6 @@ class Command(BaseCommand):
 
         if source == "court":
             source_value = CrawlJob.Source.COURT
-        elif source == "onbid":
-            source_value = CrawlJob.Source.ONBID
         else:
             source_value = None
 

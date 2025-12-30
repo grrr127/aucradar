@@ -5,7 +5,6 @@ from core.models import TimeStampedModel
 
 class AuctionSource(models.TextChoices):
     COURT = "court", "법원경매"
-    ONBID = "onbid", "온비드공매"
     OTHER = "other", "기타"
 
 
