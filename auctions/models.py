@@ -137,6 +137,8 @@ class AuctionItem(TimeStampedModel):
     detail_url = models.URLField(
         "상세 페이지 URL", max_length=500, null=True, blank=True
     )
+    ai_predicted_price = models.BigIntegerField("AI 예상 낙찰가", null=True, blank=True)
+    ai_analysis = models.TextField("AI 분석 코멘트", null=True, blank=True)
 
     class Meta:
         db_table = "auction_items"

@@ -1,153 +1,93 @@
 {% extends "core/base.html" %}
-
-{% block title %}AucRadar | 관심 물건{% endblock %}
+{% load humanize %} {% block title %}AucRadar | 관심 물건{% endblock %}
 
 {% block extra_head %}
 <style>
+  /* 기존 스타일 유지 */
   .section{margin-top:18px}
-  .hero{
-    margin-top:18px;
-    display:grid;
-    grid-template-columns:1.1fr .9fr;
-    gap:16px;
-  }
+  .hero{margin-top:18px;display:grid;grid-template-columns:1.1fr .9fr;gap:16px;}
   .muted{color:var(--muted)}
   .top h1{margin:0;font-size:28px;letter-spacing:-.3px}
   .top p{margin:8px 0 0;line-height:1.6;color:var(--muted)}
-  .filters{
-    display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;
-  }
-  .pillinput{
-    display:flex;align-items:center;gap:8px;
-    padding:10px 12px;border-radius:12px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.03);
-    font-size:13px;
-  }
-  .pillinput input, .pillinput select{
-    background:transparent;border:0;color:var(--text);outline:none;
-    font-size:13px; min-width:120px;
-  }
+  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+  .pillinput{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background: rgba(255,255,255,.03);font-size:13px;}
+  .pillinput input, .pillinput select{background:transparent;border:0;color:var(--text);outline:none;font-size:13px; min-width:120px;}
   .list{display:grid;gap:10px}
-  .item{
-    padding:14px;
-    border-radius:16px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.03);
-  }
-  .item .head{
-    display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start;
-  }
+  .item{padding:14px;border-radius:16px;border:1px solid var(--line);background: rgba(255,255,255,.03);}
+  .item .head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start;}
   .item .name{font-weight:900}
-  .badge{
-    display:inline-flex;align-items:center;gap:8px;
-    padding:7px 10px;border-radius:999px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.03);
-    color: var(--muted); font-size:12px; white-space:nowrap;
-  }
-  .badge.ok{border-color:rgba(103,240,200,.25);background:rgba(103,240,200,.08)}
-  .badge.warn{border-color:rgba(255,107,107,.25);background:rgba(255,107,107,.08)}
+  .badge{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background: rgba(255,255,255,.03);color: var(--muted); font-size:12px; white-space:nowrap;}
+  .badge.ok{border-color:rgba(103,240,200,.25);background:rgba(103,240,200,.08);color:#67f0c8;}
+  .badge.warn{border-color:rgba(255,107,107,.25);background:rgba(255,107,107,.08);color:#ff6b6b;}
   .meta{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.6}
   .actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
   .actions a{font-size:13px}
-  .side{
-    padding:16px;
-    border-radius:18px;
-    border:1px solid var(--line);
-    background: rgba(15,23,48,.55);
-    backdrop-filter: blur(10px);
-  }
+  .side{padding:16px;border-radius:18px;border:1px solid var(--line);background: rgba(15,23,48,.55);backdrop-filter: blur(10px);}
   .side .title{margin:0 0 10px;font-weight:900;font-size:16px}
   .side p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
-  .empty{
-    padding:14px;
-    border-radius:14px;
-    border:1px dashed rgba(255,255,255,.18);
-    background: rgba(255,255,255,.02);
-    color: var(--muted);
-    font-size:14px;
-    line-height:1.6;
-  }
+  .empty{padding:14px;border-radius:14px;border:1px dashed rgba(255,255,255,.18);background: rgba(255,255,255,.02);color: var(--muted);font-size:14px;line-height:1.6;}
   @media (max-width:900px){.hero{grid-template-columns:1fr}}
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="search-bar" style="margin-bottom: 24px;">
+  <form method="get" style="display: flex; gap: 8px;">
+    <input type="text" name="q" value="{{ query }}" placeholder="지역으로 검색 (예: 서울, 강남)"
+           style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--line); background: rgba(255,255,255,0.05); color: var(--text);">
+    <button type="submit" class="btn primary">검색</button>
+  </form>
+</div>
 <section class="hero">
   <div class="card">
     <div class="top">
       <h1>관심 물건</h1>
-      <p>사건을 등록하고 변동을 추적합니다. 필터로 상태/지역을 좁혀서 확인하세요.</p>
+      <p>추적 중인 경·공매 사건 리스트입니다. 실시간 상태 변동을 확인하세요.</p>
     </div>
 
     <div class="filters">
       <div class="pillinput">
         <span>검색</span>
-        <input type="text" placeholder="사건번호, 물건명 검색" />
+        <input type="text" name="q" placeholder="사건번호, 물건명 검색" value="{{ request.GET.q }}">
       </div>
-      <div class="pillinput">
-        <span>상태</span>
-        <select>
-          <option>전체</option>
-          <option>진행</option>
-          <option>종료</option>
-        </select>
-      </div>
-      <div class="pillinput">
-        <span>변동</span>
-        <select>
-          <option>최근 변동 우선</option>
-          <option>가격 변동</option>
-          <option>일정 변동</option>
-          <option>상태 변동</option>
-        </select>
-      </div>
-      <a class="btn primary" href="/watchlist/add/">물건 추가</a>
+      <a class="btn primary" href="#">물건 추가</a>
     </div>
 
     <div class="section">
       <div class="list">
+        {% for item in items %}
         <div class="item">
           <div class="head">
             <div>
-              <div class="name">[샘플] 서울중앙지법 · 2025타경12345</div>
-              <div class="muted" style="font-size:13px;">아파트 · 84.1㎡ · 감정가 4.1억</div>
+              <div class="name">[{{ item.get_source_display }}] {{ item.title }}</div>
+              <div class="muted" style="font-size:13px;">
+                {{ item.large.name|default:"분류미정" }} · {{ item.area|default:"-" }}㎡ · 감정가 {{ item.appraisal_price|intcomma }}원
+              </div>
             </div>
-            <span class="badge ok">최근 변동: 가격</span>
+            <span class="badge {% if item.status == 'active' %}ok{% else %}warn{% endif %}">
+              {{ item.get_status_display }}
+            </span>
           </div>
           <div class="meta">
-            변동: 최저가 3.2억 → 2.9억 (2025-12-26 13:10)<br/>
-            다음 기일: 2026-01-20 10:00 · 법원: 서울중앙지법
+            📍 소재지: {{ item.location }}<br/>
+            💰 <b>최저가: {{ item.min_bid_price|intcomma }}원</b> (유찰 {{ item.num_failures }}회)<br/>
+            📅 입찰일: {{ item.auction_date|date:"Y-m-d"|default:"미정" }}
           </div>
           <div class="actions">
-            <a class="btn small" href="/alerts/">알림 설정</a>
-            <a class="btn small" href="/api/docs/">API에서 보기</a>
+            <a class="btn small" href="{{ item.detail_url }}" target="_blank">원문 보기</a>
+            <a class="btn small" href="#">알림 설정</a>
+            <form action="#" method="post" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="btn small" style="color:var(--danger); background:none; border:none; cursor:pointer;">삭제</button>
+            </form>
           </div>
         </div>
-
-        <div class="item">
-          <div class="head">
-            <div>
-              <div class="name">[샘플] 수원지법 · 2025타경67890</div>
-              <div class="muted" style="font-size:13px;">다가구 · 감정가 2.8억</div>
-            </div>
-            <span class="badge warn">최근 변동: 일정</span>
-          </div>
-          <div class="meta">
-            변동: 매각기일 변경 (2025-12-26 12:42)<br/>
-            다음 기일: 2026-02-02 14:00 · 법원: 수원지법
-          </div>
-          <div class="actions">
-            <a class="btn small" href="/alerts/">이 일정만 알림</a>
-            <a class="btn small" href="/api/docs/">원문/API 확인</a>
-          </div>
-        </div>
-
+        {% empty %}
         <div class="empty">
           아직 등록된 물건이 없습니다.<br/>
-          “물건 추가” 버튼을 눌러 사건번호 또는 원문 링크를 저장해 보세요.
+          상단의 “물건 추가” 버튼을 눌러 추적을 시작해 보세요.
         </div>
+        {% endfor %}
       </div>
     </div>
   </div>
@@ -163,9 +103,8 @@
     <div class="section">
       <p class="title" style="margin-bottom:8px;">빠른 이동</p>
       <div class="actions" style="margin-top:6px;">
-        <a class="btn small" href="/dashboard/">대시보드</a>
-        <a class="btn small" href="/alerts/">알림 설정</a>
-        <a class="btn small" href="/profile/">프로필</a>
+        <a class="btn small" href="{% url 'core:dashboard' %}">대시보드</a>
+        <a class="btn small" href="{% url 'core:alerts' %}">알림 설정</a>
       </div>
     </div>
   </div>

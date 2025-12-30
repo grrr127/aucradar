@@ -5,15 +5,21 @@
 <section class="hero" style="grid-template-columns:1fr; max-width:720px; margin:22px auto 0;">
   <div class="card">
     <h1 class="h1" style="font-size:34px;">회원가입</h1>
-    <p class="sub">30초만에 계정을 만들고 관심 물건/알림을 설정하세요.</p>
+    <p class="sub">계정으로 사용할 이메일과 이름을 입력해 주세요.</p>
 
     <form method="post" style="display:grid; gap:12px; margin-top:14px;">
       {% csrf_token %}
 
       <div class="feature">
-        <b>아이디</b>
-        {{ form.username }}
-        {% if form.username.errors %}<p style="color:var(--danger); margin:8px 0 0;">{{ form.username.errors|striptags }}</p>{% endif %}
+        <b>이메일 (아이디)</b>
+        {{ form.email }}
+        {% if form.email.errors %}<p style="color:var(--danger); margin:8px 0 0;">{{ form.email.errors|striptags }}</p>{% endif %}
+      </div>
+
+      <div class="feature">
+        <b>이름</b>
+        {{ form.name }}
+        {% if form.name.errors %}<p style="color:var(--danger); margin:8px 0 0;">{{ form.name.errors|striptags }}</p>{% endif %}
       </div>
 
       <div class="feature">
@@ -39,4 +45,16 @@
     </form>
   </div>
 </section>
+
+<style>
+  input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+  }
+</style>
 {% endblock %}
