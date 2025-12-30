@@ -59,29 +59,19 @@ class RunCourtCrawlJobView(APIView):
         return Response(data, status=status.HTTP_201_CREATED)
 
 
-class RunOnbidCrawlJobView(APIView):
-    permission_classes = [AdminOnly]
-
-    def post(self, request):
-        user = request.user if request.user.is_authenticated else None
-        job = run_crawl_job(source="onbid", triggered_by=user)
-        data = CrawlJobDetailSerializer(job).data
-        return Response(data, status=status.HTTP_201_CREATED)
-
-
 class RunStatusRefreshJobView(APIView):
 
     permission_classes = [AdminOnly]
 
     def post(self, request):
         source = request.data.get("source")
-        if source not in (None, "", "court", "onbid"):
+        if source not in (None, "", "court"):
             return Response(
-                {"detail": "source는 'court', 'onbid' 또는 생략 가능"},
+                {"detail": "source는 'court' 또는 생략 가능"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        normalized_source = source or None
+        normalized_source = "court" if source == "court" else None
         job = run_status_refresh_job(source=normalized_source)
         data = CrawlJobDetailSerializer(job).data
         return Response(data, status=status.HTTP_201_CREATED)

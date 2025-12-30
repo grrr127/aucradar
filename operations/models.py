@@ -8,7 +8,6 @@ from core.models import TimeStampedModel
 class CrawlJob(TimeStampedModel):
     class Source(models.TextChoices):
         COURT = "court", "법원경매"
-        ONBID = "onbid", "온비드"
 
     class Status(models.TextChoices):
         PENDING = "pending", "대기"

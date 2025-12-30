@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-import json
 import re
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, Iterable, List, Optional
 from urllib.parse import quote as urlquote
 
-import openai
 import requests
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
+from openai import OpenAI
 
 from auctions.models import AuctionItem, CategoryLarge, CategoryMiddle, CategorySmall
 from operations.models import CrawlItemLog, CrawlJob
@@ -41,10 +40,49 @@ def parse_fail_count(raw: Optional[str]) -> int:
     return num or 0
 
 
+def _get_openai_client() -> Optional[OpenAI]:
+    api_key = getattr(settings, "OPENAI_API_KEY", "")
+    if not api_key:
+        return None
+    try:
+        return OpenAI(api_key=api_key)
+    except Exception:
+        return None
+
+
+def predict_expected_bid_price(item: AuctionItem) -> Optional[int]:
+    client = _get_openai_client()
+    if not client:
+        return None
+
+    model = getattr(settings, "OPENAI_MODEL", "gpt-4.1-mini")
+
+    prompt = (
+        "당신은 한국 법원경매 낙찰가를 추정하는 감정가 전문가입니다."
+        "입찰/매각 예정 물건의 특징을 참고해 예상 낙찰가를 '원' 단위 숫자만으로 반환하세요."
+        "숫자 이외의 문자는 포함하지 마세요."
+        f"- 소재지: {item.location or '정보 없음'}\n"
+        f"- 면적(㎡): {item.area if item.area is not None else '정보 없음'}\n"
+        f"- 감정가: {item.appraisal_price if item.appraisal_price is not None else '정보 없음'}\n"
+        f"- 최저입찰가: {item.min_bid_price if item.min_bid_price is not None else '정보 없음'}\n"
+        f"- 입찰/매각 예정일: {item.auction_date.isoformat() if item.auction_date else '정보 없음'}\n"
+        f"- 유찰 횟수: {item.num_failures}\n"
+        "- 시장 상황에 대한 간단한 추정도 반영해 숫자를 결정하세요."
+    )
+
+    try:
+        response = client.responses.create(
+            model=model,
+            input=prompt,
+            max_output_tokens=200,
+        )
+        text = response.output_text()
+        return _parse_int(text)
+    except Exception:
+        return None
+
+
 def resolve_category(usage_raw: str):
-    """
-    대분류: 건물, 중분류: 주거용건물로 고정
-    """
     # large 고정(건물)
     large, _ = CategoryLarge.objects.get_or_create(
         code="B",
@@ -361,74 +399,32 @@ def fetch_court_items(from_date: date, to_date: date) -> Iterable[Dict[str, Any]
             page_no += 1
 
 
-# AI 분석 서비스
-
-
-def analyze_item_with_ai(item: AuctionItem) -> None:
-    """
-    OpenAI API를 사용하여 예상 낙찰가와 분석 코멘트를 가져와 저장합니다.
-    """
-    api_key = getattr(settings, "OPENAI_API_KEY", None)
-    if not api_key:
-        return
-
-    client = openai.OpenAI(api_key=api_key)
-
-    prompt = f"""
-    당신은 한국 부동산 경매 전문가입니다. 아래 매물에 대한 예상 낙찰가와 짧은 분석을 제공해주세요.
-
-    [매물 정보]
-    - 사건번호/제목: {item.title}
-    - 위치: {item.location}
-    - 감정가: {item.appraisal_price}원
-    - 최저입찰가: {item.min_bid_price}원
-    - 면적: {item.area} m^2 (정보가 없으면 0)
-    - 유찰 횟수: {item.num_failures}회
-
-    JSON 형식으로 응답해주세요:
-    {{
-        "predicted_price": (숫자, 예상 낙찰가),
-        "analysis": (문자열, 100자 이내의 핵심 분석 및 근거)
-    }}
-    """
-
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a helpful real estate assistant.",
-                },
-                {"role": "user", "content": prompt},
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.7,
-        )
-        content = response.choices[0].message.content
-        result = json.loads(content)
-
-        if result:
-            item.ai_predicted_price = result.get("predicted_price")
-            item.ai_analysis = result.get("analysis")
-            item.save(update_fields=["ai_predicted_price", "ai_analysis"])
-
-    except Exception as e:
-        print(f"AI Analysis Failed for {item.id}: {e}")
+def update_expected_bid_price(item: AuctionItem) -> None:
+    predicted = predict_expected_bid_price(item)
+    if predicted and predicted != item.predicted_bid_price:
+        item.predicted_bid_price = predicted
+        item.save(update_fields=["predicted_bid_price"])
 
 
 #  1. 크롤링 Job 실행 (법원 전용)
 
 
-def run_crawl_job(source: str, triggered_by=None) -> CrawlJob:
+def run_crawl_job(
+    source: str,
+    note: str = "",
+    days: int = 30,
+    dry_run: bool = False,
+    triggered_by=None,
+) -> CrawlJob:
     # 온비드 요청 방지
-    if source == CrawlJob.Source.ONBID:
-        raise ValueError("온비드(Onbid) 공매 크롤링은 더 이상 지원하지 않습니다.")
+    if source != CrawlJob.Source.COURT:
+        raise ValueError("법원 경매 크롤링만 지원합니다.")
 
     job = CrawlJob.objects.create(
         source=source,
         status=CrawlJob.Status.PENDING,
         triggered_by=triggered_by,
+        note=note,
     )
 
     job.status = CrawlJob.Status.RUNNING
@@ -438,16 +434,14 @@ def run_crawl_job(source: str, triggered_by=None) -> CrawlJob:
     try:
         today = date.today()
         from_date = today
-        to_date = today + timedelta(days=30)
+        to_date = today + timedelta(days=days)
+        raw_items = list(fetch_court_items(from_date, to_date))
 
-        # 법원 경매만 실행
-        if source == CrawlJob.Source.COURT:
-            raw_items = list(fetch_court_items(from_date, to_date))
+        if dry_run:
+            job.total_fetched = len(raw_items)
         else:
-            raw_items = []
-
-        for raw in raw_items:
-            process_single_item(job, raw)
+            for raw in raw_items:
+                process_single_item(job, raw)
 
         job.status = CrawlJob.Status.SUCCESS
 
@@ -508,11 +502,7 @@ def process_single_item(job: CrawlJob, data: Dict[str, Any]) -> None:
             message="",
         )
 
-        # 신규 생성된 건에 한해 AI 분석 및 알림 트리거 수행
         if created:
-            # 1) AI 예상가 분석
-            analyze_item_with_ai(item)
-
             # 2) 알림 로그 생성
             try:
                 from alerts.services import create_notification_logs_for_new_item
@@ -520,6 +510,11 @@ def process_single_item(job: CrawlJob, data: Dict[str, Any]) -> None:
                 create_notification_logs_for_new_item(item)
             except Exception:
                 pass
+
+        try:
+            update_expected_bid_price(item)
+        except Exception:
+            pass
 
     except Exception as e:
         CrawlItemLog.objects.create(
@@ -544,22 +539,12 @@ def process_single_item(job: CrawlJob, data: Dict[str, Any]) -> None:
 #  3. 상태 리프레시 Job
 
 
-def run_status_refresh_job(source: Optional[str] = None) -> CrawlJob:
-    # 온비드 요청 시 스킵 처리
-    if source == CrawlJob.Source.ONBID:
-        job = CrawlJob.objects.create(
-            source=source,
-            status=CrawlJob.Status.FAILED,
-            note="온비드 미지원으로 인한 작업 중단",
-        )
-        job.finished_at = timezone.now()
-        job.save()
-        return job
+def run_status_refresh_job(source: Optional[str] = None, note: str = "") -> CrawlJob:
 
     job = CrawlJob.objects.create(
         source=source or CrawlJob.Source.COURT,
         status=CrawlJob.Status.RUNNING,
-        note="상태 리프레시 작업",
+        note=note or "상태 리프레시 작업",
     )
 
     try:
