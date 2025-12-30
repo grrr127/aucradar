@@ -4,107 +4,70 @@
 
 {% block extra_head %}
 <style>
-  .section{margin-top:18px}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
   .card.small{padding:18px}
-  .muted{color:var(--muted)}
   .formgrid{display:grid;gap:10px}
-  label{font-weight:900;font-size:14px}
-  input, select{
-    width:100%;padding:10px 12px;border-radius:12px;
-    border:1px solid var(--line);background:#0b1020;color:var(--text);
-    font-size:14px; outline:none;
-  }
-  .badge{
-    display:inline-flex;align-items:center;gap:8px;
-    padding:7px 10px;border-radius:999px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.03);
-    color: var(--muted); font-size:12px; white-space:nowrap;
-  }
-  .list{display:grid;gap:10px;margin-top:10px}
-  .item{
-    padding:12px 14px;
-    border-radius:14px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.03);
-  }
-  .item b{display:block;margin-bottom:6px}
-  .item p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+  label{font-weight:900;font-size:14px;display:block;margin-bottom:5px;}
+  input{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#0b1020;color:var(--text);font-size:14px; outline:none;}
+  .item{padding:12px 14px;border-radius:14px;border:1px solid var(--line);background: rgba(255,255,255,.03);margin-bottom:10px;}
+  .badge.success{color:#67f0c8; font-size:11px;}
+  .badge.failed{color:#ff6b6b; font-size:11px;}
   @media (max-width:900px){.grid2{grid-template-columns:1fr}}
 </style>
 {% endblock %}
 
 {% block content %}
 <section class="card small">
-  <h1 class="h1" style="font-size:28px;">프로필</h1>
-  <p class="sub" style="margin:0">
-    계정 정보와 알림 수신 설정을 관리합니다. (현재는 UI 초안이며, 로그인 사용자 정보와 연동 예정)
-  </p>
+  <h1 class="h1" style="font-size:28px;">내 프로필</h1>
+  <p class="sub">가입일: {{ user.date_joined|date:"Y년 m월 d일" }}</p>
 </section>
 
 <section class="grid2">
   <div class="card small">
     <p class="title" style="margin:0 0 10px;">계정 정보</p>
-    <div class="formgrid">
+    <form method="post" action="#" class="formgrid">
+      {% csrf_token %}
       <div>
         <label>이메일</label>
-        <input type="email" value="user@example.com" placeholder="user@example.com" />
+        <input type="email" value="{{ user.email }}" readonly style="opacity:0.6;">
       </div>
       <div>
-        <label>이름/별칭</label>
-        <input type="text" value="홍길동" placeholder="이름 또는 팀 이름" />
+        <label>이름</label>
+        <input type="text" name="name" value="{{ user.name }}" placeholder="이름을 입력하세요">
       </div>
-      <div>
-        <label>타임존</label>
-        <select>
-          <option>Asia/Seoul (UTC+9)</option>
-          <option>UTC</option>
-        </select>
+      <div style="margin-top:10px;">
+        <button type="submit" class="btn primary">정보 수정</button>
       </div>
-    </div>
-    <div class="cta" style="margin-top:14px;">
-      <a class="btn primary" href="/profile/save/">저장 (예정)</a>
-      <a class="btn" href="/accounts/password_change/">비밀번호 변경</a>
-    </div>
+    </form>
   </div>
 
   <div class="card small">
-    <p class="title" style="margin:0 0 10px;">알림 채널</p>
-    <div class="list">
-      <div class="item">
-        <b>이메일</b>
-        <p>계정 이메일로 주요 변동을 전달합니다. 기본 채널입니다.</p>
-        <div class="badge">연동 예정</div>
+    <p class="title" style="margin:0 0 10px;">최근 알림 발송 로그</p>
+    <div class="list" style="max-height: 400px; overflow-y: auto;">
+      {% for log in user.notification_logs.all|slice:":10" %} <div class="item">
+        <div style="display:flex; justify-content:space-between;">
+          <b>{{ log.message_title|truncatechars:20 }}</b>
+          <span class="badge {{ log.status }}">
+            {{ log.get_channel_display }} {{ log.get_status_display }}
+          </span>
+        </div>
+        <p style="font-size:12px; margin-top:4px;">{{ log.created_at|date:"m-d H:i" }} 발송</p>
       </div>
-      <div class="item">
-        <b>메신저</b>
-        <p>Slack/Discord/카카오톡 등 협업 채널을 추가할 예정입니다.</p>
-        <div class="badge">베타 피드백 환영</div>
-      </div>
-      <div class="item">
-        <b>웹훅</b>
-        <p>운영 자동화/내부 시스템과 연동하기 위한 웹훅 채널을 검토 중입니다.</p>
-        <div class="badge">준비 중</div>
-      </div>
+      {% empty %}
+      <div class="empty" style="font-size:13px; color:var(--muted);">발송된 알림 내역이 없습니다.</div>
+      {% endfor %}
     </div>
   </div>
 </section>
 
 <section class="card small section">
-  <p class="title" style="margin:0 0 10px;">보안</p>
-  <div class="list">
-    <div class="item">
-      <b>세션 관리</b>
-      <p>다른 기기에서 로그인한 세션을 확인/종료할 수 있는 화면을 추가할 예정입니다.</p>
-    </div>
-    <div class="item">
-      <b>2FA (검토)</b>
-      <p>이메일 또는 OTP 기반 2단계 인증을 검토 중입니다.</p>
-    </div>
-  </div>
-  <div class="cta" style="margin-top:12px;">
-    <a class="btn" href="/accounts/logout/">로그아웃</a>
+  <p class="title" style="margin:0 0 10px;">보안 및 기타</p>
+  <div class="actions">
+    <a class="btn" href="#">비밀번호 변경</a>
+    <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
+      {% csrf_token %}
+      <button type="submit" class="btn" style="color:var(--danger); border-color:var(--danger);">로그아웃</button>
+    </form>
   </div>
 </section>
 {% endblock %}

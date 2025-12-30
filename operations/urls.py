@@ -9,6 +9,8 @@ from .views import (
     RunStatusRefreshJobView,
 )
 
+app_name = "operations"
+
 urlpatterns = [
     path("jobs/", CrawlJobListView.as_view(), name="crawljob-list"),
     path("jobs/<int:pk>/", CrawlJobDetailView.as_view(), name="crawljob-detail"),

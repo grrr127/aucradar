@@ -9,6 +9,8 @@ from .views import (
     CategorySmallListView,
 )
 
+app_name = "auctions"
+
 urlpatterns = [
     path("categories/large/", CategoryLargeListView.as_view()),
     path("categories/middle/", CategoryMiddleListView.as_view()),

@@ -10,6 +10,8 @@ from users.views import (
     SignUpView,
 )
 
+app_name = "users"
+
 urlpatterns = [
     path("email/send-code/", EmailSendCodeView.as_view()),
     path("email/verify-code/", EmailVerifyCodeView.as_view()),

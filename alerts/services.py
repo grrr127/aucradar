@@ -83,14 +83,19 @@ def _build_email_body(alert: AlertPreference, items: Iterable[AuctionItem]) -> s
 
     for item in items:
         min_price = item.min_bid_price
-        min_price_str = (
-            f"{min_price:,}원" if isinstance(min_price, int) else str(min_price)
+        min_price_str = f"{min_price:,}원" if min_price else "-"
+
+        ai_price_str = (
+            f"{item.ai_predicted_price:,}원" if item.ai_predicted_price else "분석중"
         )
+        ai_comment = item.ai_analysis or "분석 내용 없음"
 
         line = (
-            f"- [{item.get_source_display()}] {item.title}\n"
+            f"- [법원경매] {item.title}\n"
             f"  위치: {item.location}\n"
             f"  최저 입찰가: {min_price_str}\n"
+            f"  ★ AI 예상가: {ai_price_str}\n"
+            f"  ★ 분석: {ai_comment}\n"
             f"  입찰일: {item.auction_date}\n"
             f"  링크: {item.detail_url or '상세 링크 없음'}\n"
         )

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import json
 import re
-import xml.etree.ElementTree as ET
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, Iterable, List, Optional
 from urllib.parse import quote as urlquote
 
+import openai
 import requests
 from django.conf import settings
 from django.db import transaction
@@ -41,6 +42,9 @@ def parse_fail_count(raw: Optional[str]) -> int:
 
 
 def resolve_category(usage_raw: str):
+    """
+    대분류: 건물, 중분류: 주거용건물로 고정
+    """
     # large 고정(건물)
     large, _ = CategoryLarge.objects.get_or_create(
         code="B",
@@ -92,7 +96,7 @@ def map_court_status(
     auction_date: Optional[date],
 ) -> str:
     """
-    mulStatcd 코드 → AuctionItem.Status 매핑 (임시 추정 버전).
+    mulStatcd 코드 → AuctionItem.Status 매핑
     """
     code = (mul_statcd or "").strip()
 
@@ -197,9 +201,6 @@ def _request_court_page(
     return resp.json()
 
 
-# 법원경매
-
-
 def _normalize_court_item(item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     court_code = item.get("boCd")
     docid = item.get("docid")
@@ -266,6 +267,7 @@ def _normalize_court_item(item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 def fetch_court_items(from_date: date, to_date: date) -> Iterable[Dict[str, Any]]:
     session = _create_court_session()
 
+    # 법원 코드 리스트
     COURT_LIST = [
         "B000210",
         "B000211",
@@ -332,9 +334,14 @@ def fetch_court_items(from_date: date, to_date: date) -> Iterable[Dict[str, Any]
     for court_code in COURT_LIST:
         page_no = 1
         while True:
-            result = _request_court_page(
-                session, court_code, from_date, to_date, page_no
-            )
+            try:
+                result = _request_court_page(
+                    session, court_code, from_date, to_date, page_no
+                )
+            except Exception:
+                # 개별 법원 타임아웃/에러 시 다음 법원으로 이동
+                break
+
             info = result.get("data") or {}
             result_list: List[Dict[str, Any]] = info.get("dlt_srchResult") or []
 
@@ -354,158 +361,70 @@ def fetch_court_items(from_date: date, to_date: date) -> Iterable[Dict[str, Any]
             page_no += 1
 
 
-# 온비드 OpenAPI (부동산 카테고리)
-
-ONBID_BASE_URL = "https://openapi.onbid.co.kr/openapi/services"
-ONBID_REAL_ESTATE_PATH = "/OnbidBidRealEstateInquireService/getBidRealEstateInquireList"
+# AI 분석 서비스
 
 
-def _onbid_get_with_retry(
-    url: str, params: Dict[str, Any], timeout: int = 25, retries: int = 3
-) -> requests.Response:
-    last_exc: Exception | None = None
-    for i in range(retries):
-        try:
-            resp = requests.get(url, params=params, timeout=timeout)
-            resp.raise_for_status()
-            return resp
-        except Exception as e:
-            last_exc = e
-            print(f"[Onbid Retry] {url} 실 패 ({i+1}/{retries}) : {e}")
-    raise RuntimeError(f"Onbid request failed after {retries} retries: {last_exc}")
+def analyze_item_with_ai(item: AuctionItem) -> None:
+    """
+    OpenAI API를 사용하여 예상 낙찰가와 분석 코멘트를 가져와 저장합니다.
+    """
+    api_key = getattr(settings, "OPENAI_API_KEY", None)
+    if not api_key:
+        return
+
+    client = openai.OpenAI(api_key=api_key)
+
+    prompt = f"""
+    당신은 한국 부동산 경매 전문가입니다. 아래 매물에 대한 예상 낙찰가와 짧은 분석을 제공해주세요.
+
+    [매물 정보]
+    - 사건번호/제목: {item.title}
+    - 위치: {item.location}
+    - 감정가: {item.appraisal_price}원
+    - 최저입찰가: {item.min_bid_price}원
+    - 면적: {item.area} m^2 (정보가 없으면 0)
+    - 유찰 횟수: {item.num_failures}회
+
+    JSON 형식으로 응답해주세요:
+    {{
+        "predicted_price": (숫자, 예상 낙찰가),
+        "analysis": (문자열, 100자 이내의 핵심 분석 및 근거)
+    }}
+    """
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful real estate assistant.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.7,
+        )
+        content = response.choices[0].message.content
+        result = json.loads(content)
+
+        if result:
+            item.ai_predicted_price = result.get("predicted_price")
+            item.ai_analysis = result.get("analysis")
+            item.save(update_fields=["ai_predicted_price", "ai_analysis"])
+
+    except Exception as e:
+        print(f"AI Analysis Failed for {item.id}: {e}")
 
 
-def _request_onbid_page(
-    page_no: int,
-    from_date: date,
-    to_date: date,
-    num_rows: int = 100,
-) -> Dict[str, Any]:
-    service_key = getattr(settings, "ONBID_SERVICE_KEY", None)
-    if not service_key:
-        raise RuntimeError("ONBID_SERVICE_KEY is not set in settings.")
-
-    url = ONBID_BASE_URL + ONBID_REAL_ESTATE_PATH
-
-    params = {
-        "serviceKey": service_key,
-        "pageNo": page_no,
-        "numOfRows": num_rows,
-        "DPSL_MTD_CD": "0001",
-        "CTGR_HIRK_ID": "10000",
-        "PBCT_BEGN_DTM": from_date.strftime("%Y%m%d"),
-        "PBCT_CLS_DTM": to_date.strftime("%Y%m%d"),
-    }
-
-    resp = _onbid_get_with_retry(url, params=params, timeout=25, retries=3)
-
-    root = ET.fromstring(resp.content)
-
-    items: List[Dict[str, Any]] = []
-    for item_el in root.findall(".//item"):
-        row: Dict[str, Any] = {}
-        for child in item_el:
-            row[child.tag] = (child.text or "").strip()
-        items.append(row)
-
-    total_count_text = root.findtext(".//totalCount", default="0")
-    total_count = int(re.sub(r"[^\d]", "", total_count_text) or 0)
-
-    return {"items": items, "totalCount": total_count}
-
-
-def _map_onbid_status(raw_status: str) -> str:
-    txt = (raw_status or "").strip()
-    if not txt:
-        return AuctionItem.Status.UNKNOWN
-    if "진행" in txt or "공고" in txt or "입찰" in txt:
-        return AuctionItem.Status.ACTIVE
-    if "예정" in txt:
-        return AuctionItem.Status.PLANNED
-    if "매각" in txt or "낙찰" in txt:
-        return AuctionItem.Status.SOLD
-    if "유찰" in txt:
-        return AuctionItem.Status.FAILED
-    return AuctionItem.Status.UNKNOWN
-
-
-def _normalize_onbid_item(item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    pbct_no = item.get("PBCT_NO")
-    cltr_no = item.get("CLTR_NO")
-    if not (pbct_no and cltr_no):
-        return None
-
-    external_id = f"ONBID-{pbct_no}-{cltr_no}"
-
-    title = (item.get("CLTR_NM") or "").strip()
-    location = (
-        item.get("NMRD_ADRS") or item.get("LDNM_ADRS") or item.get("CLTR_ADRS") or ""
-    ).strip()
-
-    appraisal_price = _parse_int(item.get("APSL_ASES_AVG_AMT"))
-    min_bid_price = _parse_int(item.get("MIN_BID_PRC"))
-    auction_date = _parse_date(item.get("PBCT_BEGN_DTM"))
-
-    raw_status = (item.get("PBCT_CLTR_STAT_NM") or "").strip()
-    status = _map_onbid_status(raw_status)
-
-    num_failures = parse_fail_count(item.get("USCBD_CNT"))
-
-    usage_raw = (
-        item.get("CTGR_SML_NM") or item.get("CTGR_FULL_NM") or item.get("CLTR_NM") or ""
-    )
-    large, middle, small = resolve_category(usage_raw)
-
-    data = {
-        "source": AuctionItem.Source.ONBID,
-        "raw_source": "onbid_openapi",
-        "external_id": external_id,
-        "title": title or external_id,
-        "location": location,
-        "area": None,
-        "min_bid_price": min_bid_price,
-        "deposit_price": None,
-        "appraisal_price": appraisal_price,
-        "auction_date": auction_date,
-        "bid_method": AuctionItem.BidMethod.DATE,
-        "raw_bid_method": item.get("BID_MTD_NM") or "",
-        "status": status,
-        "raw_status": raw_status,
-        "num_failures": num_failures,
-        "large": large,
-        "middle": middle,
-        "small": small,
-        "detail_url": None,
-    }
-    return data
-
-
-def fetch_onbid_items(from_date: date, to_date: date) -> Iterable[Dict[str, Any]]:
-    page_no = 1
-    num_rows = 100
-
-    while True:
-        result = _request_onbid_page(page_no, from_date, to_date, num_rows=num_rows)
-        items = result.get("items") or []
-        total = result.get("totalCount") or 0
-
-        if not items:
-            break
-
-        for row in items:
-            norm = _normalize_onbid_item(row)
-            if norm:
-                yield norm
-
-        if page_no * num_rows >= total:
-            break
-        page_no += 1
-
-
-#  1. 크롤링 Job 실행 (법원 / 온비드)
+#  1. 크롤링 Job 실행 (법원 전용)
 
 
 def run_crawl_job(source: str, triggered_by=None) -> CrawlJob:
+    # 온비드 요청 방지
+    if source == CrawlJob.Source.ONBID:
+        raise ValueError("온비드(Onbid) 공매 크롤링은 더 이상 지원하지 않습니다.")
+
     job = CrawlJob.objects.create(
         source=source,
         status=CrawlJob.Status.PENDING,
@@ -521,12 +440,11 @@ def run_crawl_job(source: str, triggered_by=None) -> CrawlJob:
         from_date = today
         to_date = today + timedelta(days=30)
 
+        # 법원 경매만 실행
         if source == CrawlJob.Source.COURT:
             raw_items = list(fetch_court_items(from_date, to_date))
-        elif source == CrawlJob.Source.ONBID:
-            raw_items = list(fetch_onbid_items(from_date, to_date))
         else:
-            raise ValueError(f"알 수 없는 source: {source}")
+            raw_items = []
 
         for raw in raw_items:
             process_single_item(job, raw)
@@ -544,7 +462,7 @@ def run_crawl_job(source: str, triggered_by=None) -> CrawlJob:
     return job
 
 
-#  2. 개별 매물 처리 (upsert + 로그)
+#  2. 개별 매물 처리 (upsert + AI 분석 + 로그)
 
 
 @transaction.atomic
@@ -581,6 +499,7 @@ def process_single_item(job: CrawlJob, data: Dict[str, Any]) -> None:
             result = CrawlItemLog.Result.CREATED
             job.created_count += 1
 
+        # 로그 생성
         CrawlItemLog.objects.create(
             job=job,
             auction_item=item,
@@ -589,7 +508,12 @@ def process_single_item(job: CrawlJob, data: Dict[str, Any]) -> None:
             message="",
         )
 
+        # 신규 생성된 건에 한해 AI 분석 및 알림 트리거 수행
         if created:
+            # 1) AI 예상가 분석
+            analyze_item_with_ai(item)
+
+            # 2) 알림 로그 생성
             try:
                 from alerts.services import create_notification_logs_for_new_item
 
@@ -617,10 +541,21 @@ def process_single_item(job: CrawlJob, data: Dict[str, Any]) -> None:
     )
 
 
-#  3. 상태 리프레시 Job (매각/유찰 반영)
+#  3. 상태 리프레시 Job
 
 
 def run_status_refresh_job(source: Optional[str] = None) -> CrawlJob:
+    # 온비드 요청 시 스킵 처리
+    if source == CrawlJob.Source.ONBID:
+        job = CrawlJob.objects.create(
+            source=source,
+            status=CrawlJob.Status.FAILED,
+            note="온비드 미지원으로 인한 작업 중단",
+        )
+        job.finished_at = timezone.now()
+        job.save()
+        return job
+
     job = CrawlJob.objects.create(
         source=source or CrawlJob.Source.COURT,
         status=CrawlJob.Status.RUNNING,
@@ -667,10 +602,9 @@ def run_status_refresh_job(source: Optional[str] = None) -> CrawlJob:
 
 def refresh_single_item_status(job: CrawlJob, item: AuctionItem) -> None:
     try:
+        # 법원 경매만 처리
         if item.source == AuctionItem.Source.COURT:
             new_status_data = fetch_court_item_status(item.external_id)
-        elif item.source == AuctionItem.Source.ONBID:
-            new_status_data = fetch_onbid_item_status(item.external_id)
         else:
             return
 
@@ -712,8 +646,6 @@ def refresh_single_item_status(job: CrawlJob, item: AuctionItem) -> None:
 
 
 def fetch_court_item_status(external_id: str) -> Dict[str, Any]:
-    return {}
-
-
-def fetch_onbid_item_status(external_id: str) -> Dict[str, Any]:
+    # 법원 경매 상태 갱신 로직은 실제 페이지를 다시 파싱해야 하므로 복잡도가 높음.
+    # 현재는 기본 뼈대만 유지하고, 필요 시 상세 구현 추가 필요.
     return {}
