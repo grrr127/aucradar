@@ -401,9 +401,9 @@ def fetch_court_items(from_date: date, to_date: date) -> Iterable[Dict[str, Any]
 
 def update_expected_bid_price(item: AuctionItem) -> None:
     predicted = predict_expected_bid_price(item)
-    if predicted and predicted != item.predicted_bid_price:
-        item.predicted_bid_price = predicted
-        item.save(update_fields=["predicted_bid_price"])
+    if predicted and predicted != item.ai_predicted_price:
+        item.ai_predicted_price = predicted
+        item.save(update_fields=["ai_predicted_price"])
 
 
 #  1. 크롤링 Job 실행 (법원 전용)
